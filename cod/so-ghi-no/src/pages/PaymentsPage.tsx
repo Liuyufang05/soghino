@@ -1,0 +1,13 @@
+import { ArrowDownLeft, ArrowUpRight, HandCoins, Plus } from "lucide-react";
+import type { AppData, Debt } from "../types";
+import { contactName, dateLabel, methodText, money } from "../lib/format";
+import { EmptyState } from "../components/Modal";
+export function PaymentsPage({ data, onShow, onAdd }: { data: AppData; onShow: (debt: Debt) => void; onAdd: () => void }) {
+  const payments = [...data.payments].sort((a, b) => b.paymentDate.localeCompare(a.paymentDate));
+  return <div className="page-stack">
+    <div className="page-title-row"><div><span className="eyebrow">LỊCH SỬ GIAO DỊCH</span><h1>Thanh toán</h1><p>Toàn bộ khoản thu và trả đã ghi nhận.</p></div><button className="button button-primary" onClick={onAdd}><Plus size={16} /> Ghi nhận thanh toán</button></div>
+    <section className="surface payment-summary"><div><span className="mini-icon mint"><ArrowDownLeft size={18} /></span><div><small>Đã thu hồi</small><b>{money(payments.filter((payment) => data.debts.find((debt) => debt.id === payment.debtId)?.type === "lent").reduce((sum, payment) => sum + payment.amount, 0))}</b></div></div><div><span className="mini-icon amber"><ArrowUpRight size={18} /></span><div><small>Đã thanh toán</small><b>{money(payments.filter((payment) => data.debts.find((debt) => debt.id === payment.debtId)?.type === "borrowed").reduce((sum, payment) => sum + payment.amount, 0))}</b></div></div><div><span className="mini-icon blue"><HandCoins size={18} /></span><div><small>Tổng số lần</small><b>{payments.length}</b></div></div></section>
+    <section className="surface table-surface">{payments.length === 0 ? <EmptyState icon={<HandCoins />} title="Chưa có khoản thanh toán" description="Lịch sử sẽ xuất hiện sau khi bạn ghi nhận một lần thu hoặc trả." /> : <div className="table-scroll"><table className="data-table"><thead><tr><th>NGƯỜI GIAO DỊCH</th><th>KHOẢN NỢ</th><th>NGÀY THANH TOÁN</th><th>PHƯƠNG THỨC</th><th>GHI CHÚ</th><th>SỐ TIỀN</th></tr></thead><tbody>{payments.map((payment) => { const debt = data.debts.find((item) => item.id === payment.debtId); if (!debt) return null; return <tr key={payment.id} className="click-row" onClick={() => onShow(debt)}><td><b>{contactName(data, debt.contactId)}</b></td><td><span className="code-text">{debt.code}</span><small className="table-subtext">{debt.description}</small></td><td>{dateLabel(payment.paymentDate)}</td><td>{methodText(payment.method)}</td><td className="muted-cell">{payment.note || "—"}</td><td className={"numeric payment-amount " + debt.type}>{debt.type === "lent" ? "+" : "−"}{money(payment.amount)}</td></tr>; })}</tbody></table></div>}</section>
+  </div>;
+}
+
